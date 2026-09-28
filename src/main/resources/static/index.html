@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Book My Room</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f7fb;
+            color: #222;
+        }
+
+        header {
+            background: #1e3a5f;
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 32px;
+        }
+
+        header p {
+            margin: 8px 0 0;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1100px;
+            margin: 30px auto;
+        }
+
+        .section-title {
+            color: #1e3a5f;
+            margin-top: 35px;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+        }
+
+        .card p {
+            margin: 10px 0;
+            line-height: 1.5;
+        }
+
+        .price {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1e3a5f;
+        }
+
+        .loading {
+            color: #777;
+        }
+
+        .error {
+            color: red;
+        }
+
+        /* Booking Form */
+
+        .booking-form {
+            max-width: 600px;
+            margin-top: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 7px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #1e3a5f;
+        }
+
+        .book-button {
+            width: 100%;
+            padding: 13px;
+            border: none;
+            border-radius: 8px;
+            background: #1e3a5f;
+            color: white;
+            font-size: 17px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .book-button:hover {
+            background: #162d4a;
+        }
+
+        /* Delete Button */
+
+        .delete-button {
+            width: 100%;
+            padding: 11px;
+            margin-top: 12px;
+            border: none;
+            border-radius: 8px;
+            background: #dc3545;
+            color: white;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .delete-button:hover {
+            background: #b02a37;
+        }
+
+        #bookingMessage {
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        footer {
+            margin-top: 50px;
+            background: #1e3a5f;
+            color: white;
+            text-align: center;
+            padding: 18px;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>🏨 Book My Room</h1>
+    <p>Simple and Easy Room Booking System</p>
+</header>
+
+<div class="container">
+
+    <!-- Available Rooms -->
+
+    <h2 class="section-title">Available Rooms</h2>
+
+    <div id="rooms" class="cards">
+        <p class="loading">Loading rooms...</p>
+    </div>
+
+
+    <!-- Guests -->
+
+    <h2 class="section-title">Guests</h2>
+
+    <div id="guests" class="cards">
+        <p class="loading">Loading guests...</p>
+    </div>
+
+
+    <!-- Make Booking -->
+
+    <h2 class="section-title">Make a Booking</h2>
+
+    <div class="card booking-form">
+
+        <div class="form-group">
+            <label for="roomId">Room ID</label>
+
+            <input
+                    type="number"
+                    id="roomId"
+                    placeholder="Enter Room ID"
+                    required
+            >
+        </div>
+
+
+        <div class="form-group">
+            <label for="guestId">Guest ID</label>
+
+            <input
+                    type="number"
+                    id="guestId"
+                    placeholder="Enter Guest ID"
+                    required
+            >
+        </div>
+
+
+        <div class="form-group">
+            <label for="checkIn">Check-in Date</label>
+
+            <input
+                    type="date"
+                    id="checkIn"
+                    required
+            >
+        </div>
+
+
+        <div class="form-group">
+            <label for="checkOut">Check-out Date</label>
+
+            <input
+                    type="date"
+                    id="checkOut"
+                    required
+            >
+        </div>
+
+
+        <div class="form-group">
+            <label for="totalCost">Total Cost</label>
+
+            <input
+                    type="number"
+                    id="totalCost"
+                    placeholder="Enter Total Cost"
+                    required
+            >
+        </div>
+
+
+        <button
+                class="book-button"
+                onclick="createBooking()">
+
+            🏨 Book Room
+
+        </button>
+
+
+        <p id="bookingMessage"></p>
+
+    </div>
+
+
+    <!-- Bookings -->
+
+    <h2 class="section-title">Bookings</h2>
+
+    <div id="bookings" class="cards">
+
+        <p class="loading">
+            Loading bookings...
+        </p>
+
+    </div>
+
+</div>
+
+
+<footer>
+    Book My Room © 2026
+</footer>
+
+
+<script>
+
+    // =========================
+    // LOAD ROOMS
+    // =========================
+
+    async function loadRooms() {
+
+        try {
+
+            const response =
+                await fetch('/api/rooms');
+
+            const rooms =
+                await response.json();
+
+            const roomsDiv =
+                document.getElementById('rooms');
+
+
+            if (rooms.length === 0) {
+
+                roomsDiv.innerHTML =
+                    '<p>No rooms available.</p>';
+
+                return;
+            }
+
+
+            roomsDiv.innerHTML =
+                rooms.map(room => `
+
+                    <div class="card">
+
+                        <h3>
+                            Room ${room.roomNumber}
+                        </h3>
+
+                        <p>
+                            <strong>Room ID:</strong>
+                            ${room.id}
+                        </p>
+
+                        <p>
+                            <strong>Type:</strong>
+                            ${room.type}
+                        </p>
+
+                        <p class="price">
+                            ₹${room.ratePerNight} / night
+                        </p>
+
+                    </div>
+
+                `).join('');
+
+
+        } catch (error) {
+
+            document.getElementById('rooms').innerHTML =
+                '<p class="error">Unable to load rooms.</p>';
+
+        }
+
+    }
+
+
+    // =========================
+    // LOAD GUESTS
+    // =========================
+
+    async function loadGuests() {
+
+        try {
+
+            const response =
+                await fetch('/api/guests');
+
+            const guests =
+                await response.json();
+
+            const guestsDiv =
+                document.getElementById('guests');
+
+
+            if (guests.length === 0) {
+
+                guestsDiv.innerHTML =
+                    '<p>No guests found.</p>';
+
+                return;
+            }
+
+
+            guestsDiv.innerHTML =
+                guests.map(guest => `
+
+                    <div class="card">
+
+                        <h3>
+                            ${guest.name}
+                        </h3>
+
+                        <p>
+                            <strong>Guest ID:</strong>
+                            ${guest.id}
+                        </p>
+
+                        <p>
+                            <strong>Email:</strong>
+                            ${guest.email}
+                        </p>
+
+                        <p>
+                            <strong>Phone:</strong>
+                            ${guest.phone}
+                        </p>
+
+                    </div>
+
+                `).join('');
+
+
+        } catch (error) {
+
+            document.getElementById('guests').innerHTML =
+                '<p class="error">Unable to load guests.</p>';
+
+        }
+
+    }
+
+
+    // =========================
+    // CREATE BOOKING
+    // =========================
+
+    async function createBooking() {
+
+        const roomId =
+            document.getElementById('roomId').value;
+
+        const guestId =
+            document.getElementById('guestId').value;
+
+        const checkIn =
+            document.getElementById('checkIn').value;
+
+        const checkOut =
+            document.getElementById('checkOut').value;
+
+        const totalCost =
+            document.getElementById('totalCost').value;
+
+        const message =
+            document.getElementById('bookingMessage');
+
+
+        // Check empty fields
+
+        if (
+            !roomId ||
+            !guestId ||
+            !checkIn ||
+            !checkOut ||
+            !totalCost
+        ) {
+
+            message.style.color = "red";
+
+            message.innerText =
+                "Please fill all the fields.";
+
+            return;
+        }
+
+
+        try {
+
+            const response =
+                await fetch('/api/bookings', {
+
+                    method: 'POST',
+
+                    headers: {
+                        'Content-Type':
+                            'application/json'
+                    },
+
+                    body: JSON.stringify({
+
+                        roomId:
+                            Number(roomId),
+
+                        guestId:
+                            Number(guestId),
+
+                        checkIn:
+                        checkIn,
+
+                        checkOut:
+                        checkOut,
+
+                        totalCost:
+                            Number(totalCost)
+
+                    })
+
+                });
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    "Booking failed"
+                );
+
+            }
+
+
+            const booking =
+                await response.json();
+
+
+            message.style.color =
+                "green";
+
+            message.innerText =
+                "Booking created successfully! Booking ID: "
+                + booking.id;
+
+
+            // Clear form
+
+            document.getElementById(
+                'roomId'
+            ).value = "";
+
+            document.getElementById(
+                'guestId'
+            ).value = "";
+
+            document.getElementById(
+                'checkIn'
+            ).value = "";
+
+            document.getElementById(
+                'checkOut'
+            ).value = "";
+
+            document.getElementById(
+                'totalCost'
+            ).value = "";
+
+
+            // Refresh bookings
+
+            loadBookings();
+
+
+        } catch (error) {
+
+            message.style.color =
+                "red";
+
+            message.innerText =
+                "Unable to create booking.";
+
+        }
+
+    }
+
+
+    // =========================
+    // LOAD BOOKINGS
+    // =========================
+
+    async function loadBookings() {
+
+        try {
+
+            const response =
+                await fetch('/api/bookings');
+
+            const bookings =
+                await response.json();
+
+            const bookingsDiv =
+                document.getElementById('bookings');
+
+
+            if (bookings.length === 0) {
+
+                bookingsDiv.innerHTML =
+                    '<p>No bookings found.</p>';
+
+                return;
+            }
+
+
+            bookingsDiv.innerHTML =
+                bookings.map(booking => `
+
+                    <div class="card">
+
+                        <h3>
+                            Booking #${booking.id}
+                        </h3>
+
+                        <p>
+                            <strong>Room ID:</strong>
+                            ${booking.roomId}
+                        </p>
+
+                        <p>
+                            <strong>Guest ID:</strong>
+                            ${booking.guestId}
+                        </p>
+
+                        <p>
+                            <strong>Check-in:</strong>
+                            ${booking.checkIn}
+                        </p>
+
+                        <p>
+                            <strong>Check-out:</strong>
+                            ${booking.checkOut}
+                        </p>
+
+                        <p class="price">
+                            ₹${booking.totalCost}
+                        </p>
+
+
+                        <!-- Delete Button -->
+
+                        <button
+                            class="delete-button"
+                            onclick="deleteBooking(${booking.id})">
+
+                            🗑️ Delete Booking
+
+                        </button>
+
+                    </div>
+
+                `).join('');
+
+
+        } catch (error) {
+
+            document.getElementById(
+                'bookings'
+            ).innerHTML =
+                '<p class="error">Unable to load bookings.</p>';
+
+        }
+
+    }
+
+
+    // =========================
+    // DELETE BOOKING
+    // =========================
+
+    async function deleteBooking(id) {
+
+        const confirmDelete =
+            confirm(
+                "Are you sure you want to delete Booking #" + id + "?"
+            );
+
+
+        if (!confirmDelete) {
+
+            return;
+
+        }
+
+
+        try {
+
+            const response =
+                await fetch(
+                    '/api/bookings/' + id,
+                    {
+                        method: 'DELETE'
+                    }
+                );
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    "Delete failed"
+                );
+
+            }
+
+
+            alert(
+                "Booking deleted successfully!"
+            );
+
+
+            // Refresh booking list
+
+            loadBookings();
+
+
+        } catch (error) {
+
+            alert(
+                "Unable to delete booking."
+            );
+
+        }
+
+    }
+
+
+    // =========================
+    // LOAD DATA
+    // =========================
+
+    loadRooms();
+
+    loadGuests();
+
+    loadBookings();
+
+</script>
+
+</body>
+</html>

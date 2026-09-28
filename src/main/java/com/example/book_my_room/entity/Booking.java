@@ -18,6 +18,7 @@ public class Booking {
     private Long guestId;
     private LocalDate checkIn;
     private LocalDate checkOut;
+    private double totalCost;
 
     public Long getId() {
         return id;
@@ -57,5 +58,13 @@ public class Booking {
 
     public void setCheckOut(LocalDate checkOut) {
         this.checkOut = checkOut;
+    }
+
+    public double getTotalCost() {
+        return totalCost;
+    }
+
+    public void setTotalCost(double totalCost) {
+        this.totalCost = totalCost;
     }
 }
